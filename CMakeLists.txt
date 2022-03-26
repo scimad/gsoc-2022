@@ -5,6 +5,8 @@ project(gsoc-22 LANGUAGES C CXX)
 find_package(Open3D REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
+include_directories(lib/include)
+
 add_executable(identically-colored-connected)
-target_sources(identically-colored-connected PRIVATE main.cpp)
+target_sources(identically-colored-connected PRIVATE main.cpp lib/src/IdenticallyColored.cpp)
 target_link_libraries(identically-colored-connected PRIVATE Open3D::Open3D Eigen3::Eigen)
