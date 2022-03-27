@@ -18,65 +18,39 @@ namespace gsoc
 
     void Traverse(open3d::geometry::TriangleMesh &mesh)
     {
-        // for (auto v: mesh.vertices_){ //vector of eigen3
-        //     std::cout << "v: " << v << std::endl;
-        // }
-
-        // for (auto t: mesh.triangles_){ //vector of eigen3
-        //     std::cout << "t: " << t << std::endl;
-        // }
-
-        // size_t i = 0;
-        // for (auto adj: mesh.adjacency_list_){//vector of unordered_set
-        //     std::cout << "adj of v: " << i++ << " are:" << std::endl;
-        //     for (auto adj_v: adj){
-        //         std::cout << adj_v << std::endl;
-        //     }
-        // }
-
         if (!mesh.HasAdjacencyList())
         {
             mesh.ComputeAdjacencyList();
         }
-        std::set<int> visited_vertices; // std::vector<int> visited_vertices(mesh.vertices_.size());
-        std::queue<int> next;
-        // std::cout << "Traversing" << std::endl;
-        // std::unordered_set<Eigen::Vector3d, std::hash<Eigen::Vector3d>> uniq_colors;
+        std::set<int> unvisited_vertices;
+        for (int i = 0; i < mesh.vertices_.size(); ++i) {
+            unvisited_vertices.emplace(i);
+        }
         std::vector<Eigen::Vector3d> colors;
-        for (int vidx = 0; vidx < mesh.vertices_.size(); vidx++)
+        while (!unvisited_vertices.empty())
         {   
+            int vidx = *(unvisited_vertices.begin());
             std::cout << "Checking for vert " << vidx << std::endl;
-            if (visited_vertices.count(vidx) == 0)
+            if (unvisited_vertices.count(vidx))
             {
-                std::cout << "vert " << vidx << " has not been visited." << std::endl;
-                next.push(vidx);
-                // now scrutinize the elements of queue
-                while (!next.empty())
+                std::queue<int> next_connected;
+                next_connected.push(vidx);
+                while (!next_connected.empty())
                 {
-                    int vert = next.front();
-                    next.pop();
-                    // Note 3: Associated with note 2
-                    if (visited_vertices.count(vert)){
+                    int vert = next_connected.front();
+                    next_connected.pop();
+                    if (!unvisited_vertices.count(vert)){
                         continue;
                     }
-                    // End of Note 3
-                    
-                    // Note 1: It means now we have visited that vertex
-                    visited_vertices.emplace(vert);
+                    unvisited_vertices.erase(vert);
                     std::cout << " Now I have visited vert " << vert << "." << std::endl;
-                    // End of note 1
                     auto adj_l = mesh.adjacency_list_[vert];
                     for (auto adj_v : adj_l){
-                        if (visited_vertices.count(adj_v) == 0){
-                            // Note 2: This might put things that are already in queue
-                            // Note 2: It might be good to check if adj_v is in queue already, before emplace
-                            next.emplace(adj_v); 
-                            // End of Note 2
+                        if (unvisited_vertices.count(adj_v)){
+                            next_connected.emplace(adj_v);
                         }
                     }
                 }
-            }else{
-                std::cout << "vert " << vidx << " has already been visited." << std::endl;
             }
         }
     }
