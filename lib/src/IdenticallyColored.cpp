@@ -54,16 +54,24 @@ namespace gsoc
                 while (!next.empty())
                 {
                     int vert = next.front();
+                    next.pop();
+                    // Note 3: Associated with note 2
+                    if (visited_vertices.count(vert)){
+                        continue;
+                    }
+                    // End of Note 3
                     
                     // Note 1: It means now we have visited that vertex
-                    next.pop();
                     visited_vertices.emplace(vert);
                     std::cout << " Now I have visited vert " << vert << "." << std::endl;
                     // End of note 1
                     auto adj_l = mesh.adjacency_list_[vert];
                     for (auto adj_v : adj_l){
                         if (visited_vertices.count(adj_v) == 0){
-                            next.emplace(adj_v);
+                            // Note 2: This might put things that are already in queue
+                            // Note 2: It might be good to check if adj_v is in queue already, before emplace
+                            next.emplace(adj_v); 
+                            // End of Note 2
                         }
                     }
                 }
