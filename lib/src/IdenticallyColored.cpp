@@ -1,7 +1,6 @@
 #include "IdenticallyColored.h"
 #include <queue>
 #include <set>
-#include <functional>
 
 namespace gsoc
 {
@@ -28,16 +27,16 @@ namespace gsoc
         }
         std::vector<Eigen::Vector3d> colors;
 
-        // iccps: identically connected colored components [[The] [final] [result]]
+        // icccs: identically connected colored components [[The] [final] [result]]
         // this can be vector because vidx guarantes that the order of smallest element is ascending
-        // std::vector<std::set<int>> iccps;
+        // but since we are checking for colors as well now, we need to use set again!
+        std::set<std::set<int>> icccs;
 
         std::vector<std::set<int>> connected_components;
 
         while (!unvisited_vertices.empty())
         {
             int vidx = *(unvisited_vertices.begin());
-            std::cout << "Checking for vert " << vidx << std::endl;
             if (unvisited_vertices.count(vidx))
             {
                 std::queue<int> connected_queue_dfs;
@@ -47,11 +46,17 @@ namespace gsoc
                 ///To maintain ascending index, we store vidx in set
                 std::set<int> connected_component;
 
+                //for each connected componenet, create a hash map for colors and set of vertices
+                //is using hashtable for uint8 (along with open3d::utility::ColorToUint8) better than using that for double???
+                std::unordered_map<Eigen::Vector3d, std::set<int>, open3d::utility::hash_eigen<Eigen::Vector3d>> v_with_same_color;
+
                 while (!connected_queue_dfs.empty())
                 {
                     int vert = connected_queue_dfs.front();
                     connected_queue_dfs.pop();
                     connected_component.emplace(vert);
+                    auto color = mesh.vertex_colors_[vert];
+                    v_with_same_color[color].emplace(vert);
                     if (!unvisited_vertices.count(vert)){
                         continue;
                     }
@@ -64,15 +69,19 @@ namespace gsoc
                     }
                 }
                 connected_components.insert(connected_components.end(), connected_component);
+                for (auto c_v_map : v_with_same_color){
+                    icccs.emplace(c_v_map.second);
+                }                
             }
         } //Completed visiting all vertices
-        std::cout << "Printing result: "<< std::endl;
-        for (auto cc : connected_components){
-            std::cout << "Using ierator" << std::endl;
-            for (auto it = cc.begin(); it != std::prev(cc.end()); ++it){    //std::prev to trim trailing space at EOL
+
+        std::cout << "Printing result: "<< std::endl;       
+        std::cout << "Identically Colored Connected Components" << std::endl;
+        for (auto icc : icccs){
+            for (auto it = icc.begin(); it != std::prev(icc.end()); ++it){    //std::prev to trim trailing space at EOL
                 std::cout << *it << " ";
             }
-            std::cout << *(cc.rbegin()) << std::endl;
+            std::cout << *(icc.rbegin()) << std::endl;
         }
     }
 
