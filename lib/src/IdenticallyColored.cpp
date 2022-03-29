@@ -41,7 +41,6 @@ namespace gsoc
             std::queue<int> connected_queue_dfs;
             connected_queue_dfs.push(vidx);
 
-            //for each connected componenet, create a hash map for colors and set of vertices
             //is using hashtable for uint8 (along with open3d::utility::ColorToUint8) better than using that for double???
             std::unordered_map<Eigen::Vector3d, std::set<int>, open3d::utility::hash_eigen<Eigen::Vector3d>> v_with_same_color;
 
@@ -51,8 +50,7 @@ namespace gsoc
                 connected_queue_dfs.pop();
                 v_with_same_color[mesh.vertex_colors_[vert]].emplace(vert);
                 unvisited_vertices.erase(vert);
-                auto adj_l = mesh.adjacency_list_[vert];
-                for (auto adj_v : adj_l){
+                for (auto adj_v : mesh.adjacency_list_[vert]){
                     if (unvisited_vertices.count(adj_v)){
                         connected_queue_dfs.emplace(adj_v);
                     }
