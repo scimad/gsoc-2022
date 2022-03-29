@@ -37,54 +37,40 @@ namespace gsoc
         while (!unvisited_vertices.empty())
         {
             int vidx = *(unvisited_vertices.begin());
-            if (unvisited_vertices.count(vidx))
+
+            std::queue<int> connected_queue_dfs;
+            connected_queue_dfs.push(vidx);
+
+            //for each connected componenet, create a hash map for colors and set of vertices
+            //is using hashtable for uint8 (along with open3d::utility::ColorToUint8) better than using that for double???
+            std::unordered_map<Eigen::Vector3d, std::set<int>, open3d::utility::hash_eigen<Eigen::Vector3d>> v_with_same_color;
+
+            while (!connected_queue_dfs.empty())
             {
-                std::queue<int> connected_queue_dfs;
-                connected_queue_dfs.push(vidx);
-
-                // connected_component: represents one connected component (subgraph) of graph
-                ///To maintain ascending index, we store vidx in set
-                std::set<int> connected_component;
-
-                //for each connected componenet, create a hash map for colors and set of vertices
-                //is using hashtable for uint8 (along with open3d::utility::ColorToUint8) better than using that for double???
-                std::unordered_map<Eigen::Vector3d, std::set<int>, open3d::utility::hash_eigen<Eigen::Vector3d>> v_with_same_color;
-
-                while (!connected_queue_dfs.empty())
-                {
-                    int vert = connected_queue_dfs.front();
-                    connected_queue_dfs.pop();
-                    connected_component.emplace(vert);
-                    auto color = mesh.vertex_colors_[vert];
-                    v_with_same_color[color].emplace(vert);
-                    if (!unvisited_vertices.count(vert)){
-                        continue;
-                    }
-                    unvisited_vertices.erase(vert);
-                    auto adj_l = mesh.adjacency_list_[vert];
-                    for (auto adj_v : adj_l){
-                        if (unvisited_vertices.count(adj_v)){
-                            connected_queue_dfs.emplace(adj_v);
-                        }
+                int vert = connected_queue_dfs.front();
+                connected_queue_dfs.pop();
+                v_with_same_color[mesh.vertex_colors_[vert]].emplace(vert);
+                unvisited_vertices.erase(vert);
+                auto adj_l = mesh.adjacency_list_[vert];
+                for (auto adj_v : adj_l){
+                    if (unvisited_vertices.count(adj_v)){
+                        connected_queue_dfs.emplace(adj_v);
                     }
                 }
-                connected_components.insert(connected_components.end(), connected_component);
-                for (auto c_v_map : v_with_same_color){
-                    icccs.emplace(c_v_map.second);
-                }                
             }
+            for (auto c_v_map : v_with_same_color){
+                icccs.emplace(c_v_map.second);
+            }                
         } //Completed visiting all vertices
 
         std::cout << "Printing result: "<< std::endl;       
-        std::cout << "Identically Colored Connected Components" << std::endl;
         for (auto icc : icccs){
-            for (auto it = icc.begin(); it != std::prev(icc.end()); ++it){    //std::prev to trim trailing space at EOL
-                std::cout << *it << " ";
+            for (auto v : icc){
+                std::cout << v << " ";
             }
-            std::cout << *(icc.rbegin()) << std::endl;
+            std::cout << std::endl;
         }
     }
-
     void Test(){
     }
 } // namespace gsoc
