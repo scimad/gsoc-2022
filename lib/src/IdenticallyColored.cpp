@@ -31,9 +31,6 @@ namespace gsoc
         // this can be vector because vidx guarantes that the order of smallest element is ascending
         // but since we are checking for colors as well now, we need to use set again!
         std::set<std::set<int>> icccs;
-
-        std::vector<std::set<int>> connected_components;
-
         while (!unvisited_vertices.empty())
         {
             int vidx = *(unvisited_vertices.begin());
